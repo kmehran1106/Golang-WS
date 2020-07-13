@@ -5,25 +5,16 @@ import (
 	"net/http"
 )
 
-func handleSocket(w http.ResponseWriter, r *http.Request) {
-	//serveWs(w, r)
-	switch r.Method {
-	case http.MethodGet:
-		w.Write([]byte("Hello World!"))
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
-	}
-}
-
-func main () {
+func main() {
 	hub := newHub()
 	go hub.run()
 
-	http.Handle(
-		"/websocket",
-		http.HandlerFunc(handleSocket),
+	http.HandleFunc(
+		"/websocket/",
+		func(w http.ResponseWriter, r *http.Request) {
+			serveWs(hub, w, r)
+		},
 	)
-	//http.HandleFunc("/websocket", handleSocket)
 
 	log.Fatal(http.ListenAndServe(":5050", nil))
 }
