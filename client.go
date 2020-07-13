@@ -13,7 +13,7 @@ import (
 
 const (
 	writeWait      = 10 * time.Second
-	pongWait       = 15 * time.Second
+	pongWait       = 60 * time.Second
 	pingPeriod     = (pongWait * 9) / 10
 	maxMessageSize = 512
 )
@@ -32,7 +32,7 @@ var upgrader = websocket.Upgrader{
 }
 
 type Client struct {
-	room int
+	roomId int
 	hub  *Hub
 	conn *websocket.Conn
 	send chan []byte
@@ -56,7 +56,7 @@ func (c *Client) readPump() {
 		}
 		data = bytes.TrimSpace(bytes.Replace(data, newline, space, -1))
 		message := &Message{
-			roomId: c.room,
+			roomId: c.roomId,
 			jsonStr: data,
 		}
 		c.hub.broadcast <- message
@@ -104,7 +104,7 @@ func (c *Client) writePump() {
 
 func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	customerId := strings.TrimPrefix(r.URL.Path, "/websocket/")
-	room, _ := strconv.Atoi(customerId)
+	roomId, _ := strconv.Atoi(customerId)
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -112,7 +112,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	client := &Client{
-		room: room,
+		roomId: roomId,
 		hub:  hub,
 		conn: conn,
 		send: make(chan []byte, 256),

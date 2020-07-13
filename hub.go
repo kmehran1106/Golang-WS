@@ -25,20 +25,20 @@ func (h *Hub) run() {
 	for {
 		select {
 		case client := <-h.register:
-			room := h.rooms[client.room]
+			room := h.rooms[client.roomId]
 			if room == nil {
 				room = make(map[*Client]bool)
-				h.rooms[client.room] = room
+				h.rooms[client.roomId] = room
 			}
 			room[client] = true
 		case client := <-h.unregister:
-			room := h.rooms[client.room]
+			room := h.rooms[client.roomId]
 			if room != nil {
 				if _, ok := room[client]; ok {
 					delete(room, client)
 					close(client.send)
 					if len(room) == 0 {
-						delete(h.rooms, client.room)
+						delete(h.rooms, client.roomId)
 					}
 				}
 			}
